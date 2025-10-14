@@ -140,12 +140,12 @@ def one_shot_run():
             print(f"CSV missing column: {col}")
             sys.exit(1)
 
-   now = datetime.now()
+    now = datetime.now()
 
-for _, row in df.iterrows():
-    k = str(row["Post #"])
-    if state["done"].get(k):
-        continue
+    for _, row in df.iterrows():
+        k = str(row["Post #"])
+        if state["done"].get(k):
+            continue
 
     when = parse_time(row["Day/Time (local)"])
     if when > now:
