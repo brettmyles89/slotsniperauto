@@ -170,6 +170,21 @@ def one_shot_run():
                 print_block("INDIE HACKERS", text); ok = True
             elif platform == "product_hunt_comment" and ENABLE["product_hunt_comment"]:
                 print_block("PRODUCT HUNT COMMENT", text); ok = True
+                elif platform == "mastodon" and ENABLE.get("mastodon"):
+    ok = post_mastodon(text)
+elif platform == "bluesky" and ENABLE.get("bluesky"):
+    ok = post_bluesky(text)
+elif platform == "lemmy" and ENABLE.get("lemmy"):
+    ok = post_lemmy(text)
+elif platform == "tumblr" and ENABLE.get("tumblr"):
+    ok = post_tumblr(text)
+elif platform == "devto" and ENABLE.get("devto"):
+    ok = post_devto(text)
+elif platform == "medium" and ENABLE.get("medium"):
+    ok = post_medium(text)
+elif platform == "hashnode" and ENABLE.get("hashnode"):
+    ok = post_hashnode(text)
+
             else:
                 print("[skip]", platform); ok = True
         except Exception as e:
