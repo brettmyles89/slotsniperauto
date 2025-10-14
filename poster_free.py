@@ -154,16 +154,20 @@ def one_shot_run():
         # small jitter to avoid looking botty
         time.sleep(random.randint(*JITTER_SECONDS))
 
+                # small jitter to avoid looking botty
+        time.sleep(random.randint(*JITTER_SECONDS))
+
         platform = row["Platform"]
-brand    = row.get("Brand", "")
-text     = row["Primary Copy"]
+        brand    = row.get("Brand", "")
+        text     = row["Primary Copy"]
 
-# Append CTA if present in the CSV
-cta = row.get("CTA", None)  # works for pandas Series too
-if pd.notna(cta) and str(cta).strip():
-    text = f"{text.rstrip()}\n\nCTA: {str(cta).strip()}"
+        # Append CTA if present in the CSV
+        cta = row.get("CTA", None)  # works for pandas Series too
+        if pd.notna(cta) and str(cta).strip():
+            text = f"{text.rstrip()}\n\nCTA: {str(cta).strip()}"
 
-ok = False
+        ok = False
+
 
         try:
             if platform == "mastodon" and ENABLE.get("mastodon"):
