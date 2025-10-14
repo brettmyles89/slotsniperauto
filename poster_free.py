@@ -8,9 +8,8 @@ CSV_PATH = "launch_5000_72h_multiplatform_free_NO_MEDIUM.csv"  # must match your
 STATE_PATH = "posted_state.json"                                # remembers what's posted
 JITTER_SECONDS = (0, 30)                                        # small random delay before each post
 
-
 # Enable/disable channels (all free)
-ENABLE.update({
+ENABLE = {
     "mastodon": True,
     "bluesky": True,
     "lemmy": True,
@@ -18,8 +17,6 @@ ENABLE.update({
     "devto": True,
     "medium": False,
     "hashnode": True,
-})
-
 }
 
 # === Helpers ===
