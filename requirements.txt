@@ -1,3 +1,6 @@
 pandas
 praw
 requests
+Mastodon.py
+atproto
+pytumblr
