@@ -155,16 +155,16 @@ def one_shot_run():
         time.sleep(random.randint(*JITTER_SECONDS))
 
         platform = row["Platform"]
-        brand    = row.get("Brand", "")
-        text     = row["Primary Copy"]
+brand    = row.get("Brand", "")
+text     = row["Primary Copy"]
 
-        # 👉 Append CTA if present in the CSV
-        cta = row.get("CTA", "") if isinstance(row, dict) else (row["CTA"] if "CTA" in row and pd.notna(row["CTA"]) else "")
-        if cta:
-        # Add on a new paragraph with the CTA link
-        text = f"{text.rstrip()}\n\nCTA: {cta}"
+# Append CTA if present in the CSV
+cta = row.get("CTA", None)  # works for pandas Series too
+if pd.notna(cta) and str(cta).strip():
+    text = f"{text.rstrip()}\n\nCTA: {str(cta).strip()}"
 
-        ok = False
+ok = False
+
         try:
             if platform == "mastodon" and ENABLE.get("mastodon"):
                 ok = post_mastodon(text)
