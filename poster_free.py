@@ -9,7 +9,7 @@ import pandas as pd
 import requests
 
 # === CONFIG ===
-CSV_PATH = "launch_5000_72h_multiplatform_free_NO_MEDIUM.csv"  # must match your CSV filename
+CSV_PATH = "launch_5000_72h_multiplatform_free_NO_MEDIUM_with_CTA.csv"  # must match your CSV filename
 STATE_PATH = "posted_state.json"                                # remembers what's posted
 JITTER_SECONDS = (0, 30)                                        # small random delay before each post
 
