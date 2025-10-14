@@ -154,7 +154,7 @@ def one_shot_run():
         # small jitter to avoid looking botty
         time.sleep(random.randint(*JITTER_SECONDS))
 
-                # small jitter to avoid looking botty
+                
         time.sleep(random.randint(*JITTER_SECONDS))
 
         platform = row["Platform"]
