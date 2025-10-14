@@ -182,3 +182,157 @@ def one_shot_run():
 
 if __name__ == "__main__":
     one_shot_run()
+    def post_mastodon(text):
+    try:
+        from mastodon import Mastodon
+        base = os.getenv("MASTODON_BASE_URL")      # e.g., https://mastodon.social
+        token = os.getenv("MASTODON_ACCESS_TOKEN") # user access token
+        if not base or not token:
+            print("[mastodon] missing env; printing:\n", text); return True
+        m = Mastodon(api_base_url=base, access_token=token)
+        m.status_post(text[:500])
+        return True
+    except Exception as e:
+        print("[mastodon error]", e); return False
+def post_bluesky(text):
+    try:
+        from atproto import Client
+        ident = os.getenv("BLUESKY_IDENTIFIER")   # handle or email
+        pwd = os.getenv("BLUESKY_PASSWORD")       # **app password**
+        if not ident or not pwd:
+            print("[bluesky] missing env; printing:\n", text); return True
+        c = Client()
+        c.login(ident, pwd)
+        c.send_post(text[:300])
+        return True
+    except Exception as e:
+        print("[bluesky error]", e); return False
+def post_lemmy(text):
+    # Expects a TITLE block like reddit; else falls back to short post
+    base = os.getenv("LEMMY_BASE_URL")   # e.g., https://lemmy.world
+    user = os.getenv("LEMMY_USERNAME")
+    pwd  = os.getenv("LEMMY_PASSWORD")
+    comm = os.getenv("LEMMY_COMMUNITY_ID")  # numeric id OR 'name@instance' depending on API
+    if not base or not user or not pwd or not comm:
+        print("[lemmy] missing env; printing:\n", text); return True
+    try:
+        import requests
+        # login
+        r = requests.post(f"{base}/api/v3/user/login", json={"username_or_email": user, "password": pwd}, timeout=15)
+        jwt = r.json().get("jwt")
+        if not jwt:
+            print("[lemmy] login failed:", r.text); return False
+        # parse title/body
+        if "TITLE:" in text:
+            title, body = text.split("\n\n", 1)
+            title = title.replace("TITLE:","").strip()
+            body = body.strip()
+        else:
+            title = text[:140]
+            body = text
+        # create post
+        r2 = requests.post(f"{base}/api/v3/post", json={
+            "name": title, "body": body, "community_id": int(comm)
+        }, headers={"Authorization": f"Bearer {jwt}"}, timeout=15)
+        ok = r2.ok
+        if not ok: print("[lemmy]", r2.status_code, r2.text)
+        return ok
+    except Exception as e:
+        print("[lemmy error]", e); return False
+def post_tumblr(text):
+    try:
+        import pytumblr
+        ck = os.getenv("TUMBLR_CONSUMER_KEY")
+        cs = os.getenv("TUMBLR_CONSUMER_SECRET")
+        ot = os.getenv("TUMBLR_OAUTH_TOKEN")
+        osk= os.getenv("TUMBLR_OAUTH_SECRET")
+        blog = os.getenv("TUMBLR_BLOG_IDENTIFIER")  # e.g., yourblog.tumblr.com
+        if not all([ck,cs,ot,osk,blog]):
+            print("[tumblr] missing env; printing:\n", text); return True
+        client = pytumblr.TumblrRestClient(ck, cs, ot, osk)
+        # Split first line as title if present
+        if "TITLE:" in text:
+            title, body = text.split("\n\n",1)
+            title = title.replace("TITLE:","").strip()
+            body = body.strip()
+            client.create_text(blog, state="published", title=title, body=body)
+        else:
+            client.create_text(blog, state="published", body=text)
+        return True
+    except Exception as e:
+        print("[tumblr error]", e); return False
+def post_devto(text):
+    key = os.getenv("DEVTO_API_KEY")
+    if not key:
+        print("[devto] missing API key; printing:\n", text); return True
+    try:
+        import requests
+        # Extract title/body
+        if "TITLE:" in text:
+            title, body = text.split("\n\n",1)
+            title = title.replace("TITLE:","").strip()
+            body = body.strip()
+        else:
+            title = text.split("\n")[0][:60]
+            body = text
+        r = requests.post("https://dev.to/api/articles",
+                          headers={"api-key": key, "Content-Type":"application/json"},
+                          json={"article":{"title": title, "body_markdown": body, "published": True}},
+                          timeout=20)
+        if not r.ok: print("[devto]", r.status_code, r.text)
+        return r.ok
+    except Exception as e:
+        print("[devto error]", e); return False
+def post_medium(text):
+    token = os.getenv("MEDIUM_INTEGRATION_TOKEN")
+    user_id = os.getenv("MEDIUM_USER_ID")  # you can fetch via API once; paste here
+    if not token or not user_id:
+        print("[medium] missing env; printing:\n", text); return True
+    try:
+        import requests, json as _json
+        if "TITLE:" in text:
+            title, body = text.split("\n\n",1)
+            title = title.replace("TITLE:","").strip()
+            body = body.strip()
+        else:
+            title = text.split("\n")[0][:60]
+            body = text
+        r = requests.post(f"https://api.medium.com/v1/users/{user_id}/posts",
+                          headers={"Authorization": f"Bearer {token}","Content-Type":"application/json"},
+                          data=_json.dumps({"title": title, "contentFormat":"markdown", "content": body, "publishStatus":"public"}),
+                          timeout=20)
+        if not r.ok: print("[medium]", r.status_code, r.text)
+        return r.ok
+    except Exception as e:
+        print("[medium error]", e); return False
+def post_hashnode(text):
+    token = os.getenv("HASHNODE_TOKEN")
+    pub_id = os.getenv("HASHNODE_PUBLICATION_ID")  # optional; else personal blog
+    if not token:
+        print("[hashnode] missing token; printing:\n", text); return True
+    try:
+        import requests
+        if "TITLE:" in text:
+            title, body = text.split("\n\n",1)
+            title = title.replace("TITLE:","").strip()
+            body = body.strip()
+        else:
+            title = text.split("\n")[0][:60]
+            body = text
+        q = """
+        mutation PublishPost($input: CreateStoryInput!){
+          createStory(input: $input){ code success message }
+        }
+        """
+        variables = {"input":{"title": title, "contentMarkdown": body}}
+        if pub_id:
+            variables["input"]["publicationId"] = pub_id
+        r = requests.post("https://api.hashnode.com",
+                          headers={"Content-Type":"application/json","Authorization": token},
+                          json={"query": q, "variables": variables},
+                          timeout=20)
+        if not r.ok: print("[hashnode]", r.status_code, r.text)
+        return r.ok
+    except Exception as e:
+        print("[hashnode error]", e); return False
+
