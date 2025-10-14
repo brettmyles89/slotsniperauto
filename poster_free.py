@@ -195,20 +195,26 @@ except Exception as e:
 
     save_state(state)
 
-if __name__ == "__main__":
-    one_shot_run()
-    def post_mastodon(text):
+def post_mastodon(text: str) -> bool:
     try:
         from mastodon import Mastodon
-        base = os.getenv("MASTODON_BASE_URL")      # e.g., https://mastodon.social
-        token = os.getenv("MASTODON_ACCESS_TOKEN") # user access token
+        base = os.getenv("MASTODON_BASE_URL")       # e.g., https://mastodon.social
+        token = os.getenv("MASTODON_ACCESS_TOKEN")  # user access token
         if not base or not token:
-            print("[mastodon] missing env; printing:\n", text); return True
+            print("[mastodon] missing env; printing instead:\n", text)
+            return True
         m = Mastodon(api_base_url=base, access_token=token)
         m.status_post(text[:500])
         return True
     except Exception as e:
-        print("[mastodon error]", e); return False
+        print(f"[mastodon] error: {e}")
+        return False
+
+
+# --- keep this at the very bottom of the file ---
+if __name__ == "__main__":
+    one_shot_run()
+
 def post_bluesky(text):
     try:
         from atproto import Client
