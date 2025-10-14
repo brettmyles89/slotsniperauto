@@ -148,55 +148,50 @@ def one_shot_run():
             continue
 
         when = parse_time(row["Day/Time (local)"])
-        if when > now:
-            continue  # not due yet
+if when > now:
+    continue  # not due yet
 
-        # small jitter to avoid looking botty
-        time.sleep(random.randint(*JITTER_SECONDS))
+# small jitter to avoid looking botty
+time.sleep(random.randint(*JITTER_SECONDS))
 
-        platform = row["Platform"]
-        brand    = row["Brand"]
-        text     = row["Primary Copy"]
+platform = row["Platform"]
+brand    = row["Brand"]
+text     = row["Primary Copy"]
 
+ok = False
+try:
+    if platform == "reddit_post" and ENABLE.get("reddit_post"):
+        ok = post_reddit(text, brand)
+    elif platform == "reddit_comment" and ENABLE.get("reddit_comment"):
+        ok = post_reddit_comment(text)
+    elif platform == "discord_message" and ENABLE.get("discord_message"):
+        ok = post_discord(text)
+    elif platform == "telegram_channel_post" and ENABLE.get("telegram_channel_post"):
+        ok = post_telegram_channel(text, brand)
+    elif platform == "indie_hackers" and ENABLE.get("indie_hackers"):
+        print_block("INDIE HACKERS", text); ok = True
+    elif platform == "product_hunt_comment" and ENABLE.get("product_hunt_comment"):
+        print_block("PRODUCT HUNT COMMENT", text); ok = True
+    elif platform == "mastodon" and ENABLE.get("mastodon"):
+        ok = post_mastodon(text)
+    elif platform == "bluesky" and ENABLE.get("bluesky"):
+        ok = post_bluesky(text)
+    elif platform == "lemmy" and ENABLE.get("lemmy"):
+        ok = post_lemmy(text)
+    elif platform == "tumblr" and ENABLE.get("tumblr"):
+        ok = post_tumblr(text)
+    elif platform == "devto" and ENABLE.get("devto"):
+        ok = post_devto(text)
+    elif platform == "medium" and ENABLE.get("medium"):
+        ok = post_medium(text)
+    elif platform == "hashnode" and ENABLE.get("hashnode"):
+        ok = post_hashnode(text)
+    else:
+        print(f"Skipping unknown or disabled platform: {platform}")
         ok = False
-        try:
-            if platform == "reddit_post" and ENABLE["reddit_post"]:
-                ok = post_reddit(text, brand)
-            elif platform == "reddit_comment" and ENABLE["reddit_comment"]:
-                ok = post_reddit_comment(text)
-            elif platform == "discord_message" and ENABLE["discord_message"]:
-                ok = post_discord(text)
-            elif platform == "telegram_channel_post" and ENABLE["telegram_channel_post"]:
-                ok = post_telegram_channel(text, brand)
-            elif platform == "indie_hackers" and ENABLE["indie_hackers"]:
-                print_block("INDIE HACKERS", text); ok = True
-            elif platform == "product_hunt_comment" and ENABLE["product_hunt_comment"]:
-                print_block("PRODUCT HUNT COMMENT", text); ok = True
-                elif platform == "mastodon" and ENABLE.get("mastodon"):
-    ok = post_mastodon(text)
-elif platform == "bluesky" and ENABLE.get("bluesky"):
-    ok = post_bluesky(text)
-elif platform == "lemmy" and ENABLE.get("lemmy"):
-    ok = post_lemmy(text)
-elif platform == "tumblr" and ENABLE.get("tumblr"):
-    ok = post_tumblr(text)
-elif platform == "devto" and ENABLE.get("devto"):
-    ok = post_devto(text)
-elif platform == "medium" and ENABLE.get("medium"):
-    ok = post_medium(text)
-elif platform == "hashnode" and ENABLE.get("hashnode"):
-    ok = post_hashnode(text)
-
-            else:
-                print("[skip]", platform); ok = True
-        except Exception as e:
-            print("[error]", platform, e); ok = False
-
-        if ok:
-            state["done"][k] = True
-            print(f"[posted] #{k} • {platform} • {brand}")
-        else:
-            print(f"[retry later] #{k} • {platform} • {brand}")
+except Exception as e:
+    ok = False
+    print(f"[ERROR] {platform}: {e}")
 
     save_state(state)
 
