@@ -142,80 +142,52 @@ def one_shot_run():
 
     now = datetime.now()
 
-for _, row in df.iterrows():
-    k = str(row["Post #"])
-    if state["done"].get(k):
-        continue
+    for _, row in df.iterrows():
+        k = str(row["Post #"])
+        if state["done"].get(k):
+            continue
 
-    when = parse_time(row["Day/Time (local)"])
-    if when > now:
-        continue  # not due yet
+        when = parse_time(row["Day/Time (local)"])
+        if when > now:
+            continue  # not due yet
 
-    # small jitter to avoid looking botty
-    time.sleep(random.randint(*JITTER_SECONDS))
+        # small jitter to avoid looking botty
+        time.sleep(random.randint(*JITTER_SECONDS))
 
-    platform = row["Platform"]
-    brand    = row.get("Brand", "")
-    text     = row["Primary Copy"]
+        platform = row["Platform"]
+        brand    = row.get("Brand", "")
+        text     = row["Primary Copy"]
 
-    ok = False
-
-
-try:
-    if platform == "reddit_post" and ENABLE.get("reddit_post"):
-        ok = post_reddit(text, brand)
-    elif platform == "reddit_comment" and ENABLE.get("reddit_comment"):
-        ok = post_reddit_comment(text)
-    elif platform == "discord_message" and ENABLE.get("discord_message"):
-        ok = post_discord(text)
-    elif platform == "telegram_channel_post" and ENABLE.get("telegram_channel_post"):
-        ok = post_telegram_channel(text, brand)
-    elif platform == "indie_hackers" and ENABLE.get("indie_hackers"):
-        print_block("INDIE HACKERS", text); ok = True
-    elif platform == "product_hunt_comment" and ENABLE.get("product_hunt_comment"):
-        print_block("PRODUCT HUNT COMMENT", text); ok = True
-    elif platform == "mastodon" and ENABLE.get("mastodon"):
-        ok = post_mastodon(text)
-    elif platform == "bluesky" and ENABLE.get("bluesky"):
-        ok = post_bluesky(text)
-    elif platform == "lemmy" and ENABLE.get("lemmy"):
-        ok = post_lemmy(text)
-    elif platform == "tumblr" and ENABLE.get("tumblr"):
-        ok = post_tumblr(text)
-    elif platform == "devto" and ENABLE.get("devto"):
-        ok = post_devto(text)
-    elif platform == "medium" and ENABLE.get("medium"):
-        ok = post_medium(text)
-    elif platform == "hashnode" and ENABLE.get("hashnode"):
-        ok = post_hashnode(text)
-    else:
-        print(f"Skipping unknown or disabled platform: {platform}")
         ok = False
-except Exception as e:
-    ok = False
-    print(f"[ERROR] {platform}: {e}")
+        try:
+            if platform == "mastodon" and ENABLE.get("mastodon"):
+                ok = post_mastodon(text)
+            elif platform == "discord_message" and ENABLE.get("discord_message"):
+                ok = post_discord(text)
+            elif platform == "telegram_channel_post" and ENABLE.get("telegram_channel_post"):
+                ok = post_telegram_channel(text, brand)
+            elif platform == "reddit_post" and ENABLE.get("reddit_post"):
+                ok = post_reddit(text, brand)
+            elif platform == "reddit_comment" and ENABLE.get("reddit_comment"):
+                ok = post_reddit_comment(text)
+            else:
+                print(f"Skipping unknown or disabled platform: {platform}")
+                ok = False
+        except Exception as e:
+            ok = False
+            print(f"[ERROR] {platform}: {e}")
 
+        if ok:
+            state["done"][k] = True
+            save_state(state)
+
+    # final save as a safeguard
     save_state(state)
 
-def post_mastodon(text: str) -> bool:
-    try:
-        from mastodon import Mastodon
-        base = os.getenv("MASTODON_BASE_URL")       # e.g., https://mastodon.social
-        token = os.getenv("MASTODON_ACCESS_TOKEN")  # user access token
-        if not base or not token:
-            print("[mastodon] missing env; printing instead:\n", text)
-            return True
-        m = Mastodon(api_base_url=base, access_token=token)
-        m.status_post(text[:500])
-        return True
-    except Exception as e:
-        print(f"[mastodon] error: {e}")
-        return False
 
-
-# --- keep this at the very bottom of the file ---
 if __name__ == "__main__":
     one_shot_run()
+
 
 def post_bluesky(text):
     try:
