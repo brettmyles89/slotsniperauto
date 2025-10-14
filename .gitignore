@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.build/
+dist/
+venv/
+.venv/
+.env
+.python-version
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.replit
+
+# Logs/cache
+*.log
+.cache/
+pip-wheel-metadata/
+
+# Secrets (never commit)
+secrets*.json
+.env.*
+*.key
+*.pem
+
+# SQLite (usually ignore)
+*.db
+!core.db               # delete this line if you do NOT want core.db tracked
+
+# Poster state (keep tracked so Actions can resume)
+!posted_state.json
