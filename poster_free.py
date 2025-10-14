@@ -1,5 +1,10 @@
-import os, time, random, json, sys
+import os
+import sys
+import time
+import json
+import random
 from datetime import datetime
+
 import pandas as pd
 import requests
 
@@ -15,7 +20,7 @@ ENABLE = {
     "lemmy": True,
     "tumblr": True,
     "devto": True,
-    "medium": False,
+    "medium": False,  # leave False if you're not posting to Medium in this script
     "hashnode": True,
 }
 
