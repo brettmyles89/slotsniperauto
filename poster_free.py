@@ -140,25 +140,26 @@ def one_shot_run():
             print(f"CSV missing column: {col}")
             sys.exit(1)
 
-    now = datetime.now()
+   now = datetime.now()
 
-    for _, row in df.iterrows():
-        k = str(row["Post #"])
-        if state["done"].get(k):
-            continue
+for _, row in df.iterrows():
+    k = str(row["Post #"])
+    if state["done"].get(k):
+        continue
 
-        when = parse_time(row["Day/Time (local)"])
-if when > now:
-    continue  # not due yet
+    when = parse_time(row["Day/Time (local)"])
+    if when > now:
+        continue  # not due yet
 
-# small jitter to avoid looking botty
-time.sleep(random.randint(*JITTER_SECONDS))
+    # small jitter to avoid looking botty
+    time.sleep(random.randint(*JITTER_SECONDS))
 
-platform = row["Platform"]
-brand    = row["Brand"]
-text     = row["Primary Copy"]
+    platform = row["Platform"]
+    brand    = row["Brand"]
+    text     = row["Primary Copy"]
 
-ok = False
+    ok = False
+
 try:
     if platform == "reddit_post" and ENABLE.get("reddit_post"):
         ok = post_reddit(text, brand)
