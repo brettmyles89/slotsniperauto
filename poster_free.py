@@ -10,13 +10,16 @@ STATE_PATH = "posted_state.json"                      # remembers what's posted
 JITTER_SECONDS = (0, 30)                              # small random delay before each post
 
 # Enable/disable channels (all free)
-ENABLE = {
-    "reddit_post": True,            # auto-post IF a subreddit env is set; else prints for manual paste
-    "reddit_comment": True,         # prints for manual paste (safer than auto-replying)
-    "discord_message": False,        # posts via Discord webhooks (free)
-    "telegram_channel_post": True,  # posts via your Telegram bots (free)
-    "indie_hackers": True,          # prints for manual paste
-    "product_hunt_comment": True,   # prints for manual paste
+ENABLE.update({
+    "mastodon": True,
+    "bluesky": True,
+    "lemmy": True,
+    "tumblr": True,
+    "devto": True,
+    "medium": True,
+    "hashnode": True,
+})
+
 }
 
 # === Helpers ===
