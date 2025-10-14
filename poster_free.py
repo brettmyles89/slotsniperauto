@@ -158,6 +158,12 @@ def one_shot_run():
         brand    = row.get("Brand", "")
         text     = row["Primary Copy"]
 
+        # 👉 Append CTA if present in the CSV
+        cta = row.get("CTA", "") if isinstance(row, dict) else (row["CTA"] if "CTA" in row and pd.notna(row["CTA"]) else "")
+        if cta:
+        # Add on a new paragraph with the CTA link
+        text = f"{text.rstrip()}\n\nCTA: {cta}"
+
         ok = False
         try:
             if platform == "mastodon" and ENABLE.get("mastodon"):
