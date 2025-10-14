@@ -16,7 +16,7 @@ ENABLE.update({
     "lemmy": True,
     "tumblr": True,
     "devto": True,
-    "medium": True,
+    "medium": False,
     "hashnode": True,
 })
 
