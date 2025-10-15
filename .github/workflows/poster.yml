@@ -1,15 +1,22 @@
 name: 72h Free Poster
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false   # queue instead of cancel; set true to cancel older runs
+
 on:
   schedule:
-    - cron: "*/10 * * * *"   # every 10 minutes
+    - cron: "*/10 * * * *"   # every 10 minutes (UTC)
   workflow_dispatch: {}       # allow manual run
 
 jobs:
   run-poster:
-    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest           # <-- put this back
+    timeout-minutes: 20
     permissions:
-      contents: write         # to commit posted_state.json updates
+      contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,8 +31,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Echo start
+        run: echo "Starting poster at $(date -u)"
+
+
+      - name: Syntax check              # <-- fixed indentation
+        run: python -m py_compile poster_free.py
+
       - name: Run poster
         env:
+          PYTHONUNBUFFERED: "1"   # stream logs live
+          MAX_POSTS: "10"         # optional: matches your script
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
@@ -38,7 +54,7 @@ jobs:
           TRIALKILLER_BOT_TOKEN: ${{ secrets.TRIALKILLER_BOT_TOKEN }}
           SS_CHANNEL: ${{ secrets.SS_CHANNEL }}
           TK_CHANNEL: ${{ secrets.TK_CHANNEL }}
-        run: python poster_free.py
+        run: timeout 900 python poster_free.py
 
       - name: Commit state
         run: |
@@ -49,3 +65,4 @@ jobs:
             git commit -m "Update posting state [skip ci]" || true
             git push
           fi
+
