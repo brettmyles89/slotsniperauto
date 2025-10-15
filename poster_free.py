@@ -131,6 +131,21 @@ def post_telegram_channel(text, brand):
 def print_block(label, text):
     print(f"\n[{label} — paste manually]\n{text}\n")
 
+def post_mastodon(text: str) -> bool:
+    try:
+        from mastodon import Mastodon
+        base = os.getenv("MASTODON_BASE_URL")       # e.g., https://mastodon.social
+        token = os.getenv("MASTODON_ACCESS_TOKEN")  # user access token
+        if not base or not token:
+            print("[mastodon] missing env; printing instead:\n", text)
+            return True
+        m = Mastodon(api_base_url=base, access_token=token)
+        m.status_post(text[:500])
+        return True
+    except Exception as e:
+        print(f"[mastodon] error: {e}")
+        return False
+
 # === One-shot run (for GitHub Actions schedule) ===
 def one_shot_run():
     print(f"[poster] start {datetime.now().isoformat()}", flush=True)
