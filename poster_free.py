@@ -43,12 +43,6 @@ def parse_time(s):
         return datetime.now()
     return datetime.strptime(s, "%Y-%m-%d %H:%M")  # must match CSV format
 
-def spin_webhook():
-    """Pick a random Discord webhook from DISCORD_WEBHOOK_URLS (comma-separated)."""
-    urls = os.getenv("DISCORD_WEBHOOK_URLS", "").split(",")
-    urls = [u.strip() for u in urls if u.strip()]
-    return random.choice(urls) if urls else None
-
 # === Reddit (PRAW) ===
 def reddit_client():
     import praw
@@ -90,43 +84,6 @@ def post_reddit_comment(text):
     """We don't auto-reply to threads; print for manual contextual reply."""
     print("\n[REDDIT COMMENT — paste under relevant thread]\n" + text + "\n")
     return True
-
-# === Discord ===
-def post_discord(text):
-    url = spin_webhook()
-    if not url:
-        print("[discord] No DISCORD_WEBHOOK_URLS set; printing for manual paste:\n", text)
-        return True
-    try:
-        r = requests.post(url, json={"content": text}, timeout=10)
-        if r.ok:
-            return True
-        print("[discord] non-200:", r.status_code, r.text)
-        return False
-    except Exception as e:
-        print("[discord error]", e)
-        return False
-
-# === Telegram ===
-def post_telegram_channel(text, brand):
-    token = os.getenv("SLOTSNIPER_BOT_TOKEN") if brand == "slotsniper" else os.getenv("TRIALKILLER_BOT_TOKEN")
-    chat  = os.getenv("SS_CHANNEL") if brand == "slotsniper" else os.getenv("TK_CHANNEL")
-    if not token or not chat:
-        print("[telegram] Missing token or channel; print instead:\n", text)
-        return True
-    try:
-        r = requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            json={"chat_id": chat, "text": text, "disable_web_page_preview": True},
-            timeout=10,
-        )
-        if r.ok:
-            return True
-        print("[telegram] non-200:", r.status_code, r.text)
-        return False
-    except Exception as e:
-        print("[telegram error]", e)
-        return False
 
 def print_block(label, text):
     print(f"\n[{label} — paste manually]\n{text}\n")
@@ -196,10 +153,6 @@ def one_shot_run():
         try:
             if platform == "mastodon" and ENABLE.get("mastodon"):
                 ok = post_mastodon(text)
-            elif platform == "discord_message" and ENABLE.get("discord_message"):
-                ok = post_discord(text)
-            elif platform == "telegram_channel_post" and ENABLE.get("telegram_channel_post"):
-                ok = post_telegram_channel(text, brand)
             elif platform == "reddit_post" and ENABLE.get("reddit_post"):
                 ok = post_reddit(text, brand)
             elif platform == "reddit_comment" and ENABLE.get("reddit_comment"):
