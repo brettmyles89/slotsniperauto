@@ -23,6 +23,9 @@ ENABLE = {
     "medium": False,  # leave False if you're not posting to Medium in this script
     "hashnode": True,
 }
+# Soft cap: limit how many posts we attempt per run (prevents long hangs)
+MAX_POSTS = 10
+
 
 # === Helpers ===
 def load_state():
@@ -130,8 +133,17 @@ def print_block(label, text):
 
 # === One-shot run (for GitHub Actions schedule) ===
 def one_shot_run():
+    print(f"[poster] start {datetime.now().isoformat()}", flush=True)
+
+    if not os.path.exists(CSV_PATH):
+        print(f"[poster] CSV not found: {os.path.abspath(CSV_PATH)}", flush=True)
+        sys.exit(1)
+
     df = pd.read_csv(CSV_PATH)
+    print(f"[poster] loaded CSV rows={len(df)} from {CSV_PATH}", flush=True)
+
     state = load_state()
+    
 
     # sanity
     required = ["Post #", "Day/Time (local)", "Platform", "Brand", "Primary Copy"]
@@ -141,6 +153,9 @@ def one_shot_run():
             sys.exit(1)
 
     now = datetime.now()
+        posted_count = 0
+    any_due = False
+
 
     for _, row in df.iterrows():
         k = str(row["Post #"])
@@ -150,11 +165,9 @@ def one_shot_run():
         when = parse_time(row["Day/Time (local)"])
         if when > now:
             continue  # not due yet
+        any_due = True
 
-        # small jitter to avoid looking botty
-        time.sleep(random.randint(*JITTER_SECONDS))
-
-                
+        # small jitter to avoid looking botty (keep ONE sleep)
         time.sleep(random.randint(*JITTER_SECONDS))
 
         platform = row["Platform"]
@@ -187,12 +200,24 @@ def one_shot_run():
             ok = False
             print(f"[ERROR] {platform}: {e}")
 
+        print(f"[poster] row={k} platform={platform} ok={ok}", flush=True)
+
         if ok:
             state["done"][k] = True
             save_state(state)
+            posted_count += 1
+            if posted_count >= MAX_POSTS:
+                print(f"[poster] hit MAX_POSTS={MAX_POSTS}, exiting early", flush=True)
+                break
+
 
     # final save as a safeguard
     save_state(state)
+
+    if not any_due:
+        print("[poster] nothing due; exit", flush=True)
+    print(f"[poster] done {datetime.now().isoformat()} posted={posted_count}", flush=True)
+
 
 
 if __name__ == "__main__":
