@@ -143,7 +143,6 @@ def one_shot_run():
     print(f"[poster] loaded CSV rows={len(df)} from {CSV_PATH}", flush=True)
 
     state = load_state()
-    
 
     # sanity
     required = ["Post #", "Day/Time (local)", "Platform", "Brand", "Primary Copy"]
@@ -153,9 +152,8 @@ def one_shot_run():
             sys.exit(1)
 
     now = datetime.now()
-        posted_count = 0
+    posted_count = 0          # <-- align with 'now' (no extra indent)
     any_due = False
-
 
     for _, row in df.iterrows():
         k = str(row["Post #"])
@@ -175,13 +173,11 @@ def one_shot_run():
         text     = row["Primary Copy"]
 
         # Append CTA if present in the CSV
-        cta = row.get("CTA", None)  # works for pandas Series too
+        cta = row.get("CTA", None)
         if pd.notna(cta) and str(cta).strip():
             text = f"{text.rstrip()}\n\nCTA: {str(cta).strip()}"
 
         ok = False
-
-
         try:
             if platform == "mastodon" and ENABLE.get("mastodon"):
                 ok = post_mastodon(text)
@@ -209,7 +205,6 @@ def one_shot_run():
             if posted_count >= MAX_POSTS:
                 print(f"[poster] hit MAX_POSTS={MAX_POSTS}, exiting early", flush=True)
                 break
-
 
     # final save as a safeguard
     save_state(state)
